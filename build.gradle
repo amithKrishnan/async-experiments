@@ -1,12 +1,23 @@
-apply plugin: 'java'
+apply plugin: 'groovy'
 
-sourceCompatibility = 1.5
-version = '1.0'
+sourceCompatibility = 1.7
+
+group = 'com.automata.expt'
+version = '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
+    jcenter()
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.11'
+    compile 'org.codehaus.groovy:groovy-all:2.4.3'
+    compile 'cglib:cglib-nodep:2.2'
+    compile 'org.objenesis:objenesis:2.1'
+    compile 'org.codenarc:CodeNarc:0.23'
+    compile 'org.slf4j:slf4j-api:1.7.12'
+    compile 'ch.qos.logback:logback-core:1.1.3'
+    compile 'ch.qos.logback:logback-classic:1.1.3'
+    testCompile 'org.spockframework:spock-core:1.0-groovy-2.4'
+    testCompile 'org.spockframework:spock-spring:1.0-groovy-2.4'
 }
