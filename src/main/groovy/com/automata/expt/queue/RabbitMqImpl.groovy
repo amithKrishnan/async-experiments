@@ -22,7 +22,10 @@ class RabbitMqImpl {
 
     void configure() {
         ConnectionFactory factory = new ConnectionFactory()
-        factory.setHost("localhost")
+        String uri = System.getenv("CLOUDAMQP_URL") ?: "amqp://guest:guest@localhost"
+        factory.setUri(uri)
+        factory.setRequestedHeartbeat(30)
+        factory.setConnectionTimeout(30)
         connection = factory.newConnection()
         channel = connection.createChannel()
 
