@@ -41,4 +41,4 @@ shadowJar{
     archiveName = "async-experiments.jar"
 }
 
-task stage(dependsOn: ['clean', 'shadow'])
+task stage(dependsOn: ['clean', 'shadowJar'])
