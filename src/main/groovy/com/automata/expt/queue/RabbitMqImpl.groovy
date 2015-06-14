@@ -1,27 +1,59 @@
 package com.automata.expt.queue
 
+import com.rabbitmq.client.*
+
 /**
  * Created by Amith Krishnan on 6/13/15.
  */
-class RabbitMqImpl implements QueueInterface{
+class RabbitMqImpl {
 
-    @Override
+    String inputQueue
+    String outputQueue
+    String exchange
+    Connection connection
+    Channel channel
+    QueueingConsumer consumer
+
+    RabbitMqImpl(){
+        inputQueue = "input-queue"
+        outputQueue = "output-queue"
+        exchange = "worker-exchange"
+    }
+
     void configure() {
+        ConnectionFactory factory = new ConnectionFactory()
+        factory.setHost("localhost")
+        connection = factory.newConnection()
+        channel = connection.createChannel()
 
+        channel.exchangeDeclare(exchange, "direct", true);
+
+        channel.queueDeclare(inputQueue, false, false, false, null)
+        channel.queueBind(inputQueue, exchange, "wrkrIn");
+
+        channel.queueDeclare(outputQueue, false, false, false, null)
+        channel.queueBind(outputQueue, exchange, "wrkrOut");
     }
 
-    @Override
-    boolean listen() {
-        return false
+    void listen() {
+        consumer = new QueueingConsumer(channel)
+        channel.basicConsume(inputQueue, true, consumer)
     }
 
-    @Override
-    String receive() {
-        return null
+    boolean sendMessage(String message){
+        boolean success = true
+        try {
+            channel.basicPublish(exchange, "wrkrOut", null, message.getBytes())
+        } catch (IOException e) {
+            //TODO error handling
+            success = false
+        }
+        return success
     }
 
-    @Override
-    boolean transmit(String message) {
-        return false
+    void close(){
+        channel?.close()
+        connection?.close()
     }
+
 }
