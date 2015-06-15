@@ -12,12 +12,17 @@ class RabbitMqImpl {
     String exchange
     Connection connection
     Channel channel
-    QueueingConsumer consumer
+    QueueingConsumer workerConsumer
+    QueueingConsumer appConsumer
+    String inputQueueKey
+    String outputQueueKey
 
     RabbitMqImpl(){
         inputQueue = "input-queue"
         outputQueue = "output-queue"
         exchange = "worker-exchange"
+        inputQueueKey = "wrkrIn"
+        outputQueueKey = "wrkrOut"
     }
 
     void configure() {
@@ -32,21 +37,26 @@ class RabbitMqImpl {
         channel.exchangeDeclare(exchange, "direct", true);
 
         channel.queueDeclare(inputQueue, false, false, false, null)
-        channel.queueBind(inputQueue, exchange, "wrkrIn");
+        channel.queueBind(inputQueue, exchange, inputQueueKey);
 
         channel.queueDeclare(outputQueue, false, false, false, null)
-        channel.queueBind(outputQueue, exchange, "wrkrOut");
+        channel.queueBind(outputQueue, exchange, outputQueueKey);
     }
 
-    void listen() {
-        consumer = new QueueingConsumer(channel)
-        channel.basicConsume(inputQueue, true, consumer)
+    void workerListen() {
+        workerConsumer = new QueueingConsumer(channel)
+        channel.basicConsume(inputQueue, true, workerConsumer)
     }
 
-    boolean sendMessage(String message){
+    void appListen() {
+        appConsumer = new QueueingConsumer(channel)
+        channel.basicConsume(outputQueue, true, appConsumer)
+    }
+
+    boolean sendMessage(String message, String routingKey){
         boolean success = true
         try {
-            channel.basicPublish(exchange, "wrkrOut", null, message.getBytes())
+            channel.basicPublish(exchange, routingKey, null, message.getBytes())
         } catch (IOException e) {
             //TODO error handling
             success = false

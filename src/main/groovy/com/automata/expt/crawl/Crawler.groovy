@@ -7,6 +7,7 @@ class Crawler {
 
     String crawl(String url){
         return new URL(url).text
+        //return "<title>${url}</title>"
     }
 
 }

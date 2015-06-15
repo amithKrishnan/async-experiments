@@ -13,16 +13,17 @@ class Worker {
     RabbitMqImpl queue
     Crawler crawler
 
-    static void main(String[] args) {
+    static void main(String[] args){
         Worker worker = new Worker()
         worker.init()
         worker.start()
+        worker.setupShutdownHook()
     }
 
     void init() {
         queue = new RabbitMqImpl()
         queue.configure()
-        queue.listen()
+        queue.workerListen()
         crawler = new Crawler()
     }
 
@@ -30,7 +31,7 @@ class Worker {
         new Thread(new Runnable(){
             void run(){
                 while (true) {
-                        QueueingConsumer.Delivery delivery = queue.consumer.nextDelivery()
+                        QueueingConsumer.Delivery delivery = queue.workerConsumer.nextDelivery()
                         String message = new String(delivery.getBody())
                         processMessage(message)
                 }
@@ -43,7 +44,6 @@ class Worker {
     void processMessage(String receivedMessage){
         //TODO convert from json and extract required and logging
         println "got $receivedMessage"
-        receivedMessage = "http://"+receivedMessage
         work(receivedMessage)
     }
 
@@ -53,7 +53,7 @@ class Worker {
         if(titleMatcher.find()){
             String title = titleMatcher[0][1]
             String outputMessage = prepareOutputMessage(title)
-            queue.sendMessage(outputMessage)
+            queue.sendMessage(outputMessage, queue.outputQueueKey)
         }
     }
 
@@ -61,6 +61,13 @@ class Worker {
         //TODO convert to JSON and logging
         println "preparing to send $crawledOutput"
         return crawledOutput
+    }
+
+    void setupShutdownHook() {
+        addShutdownHook {
+            println("Shutting down the worker")
+            queue?.close()
+        }
     }
 
 }
