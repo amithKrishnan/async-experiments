@@ -27,7 +27,7 @@ class RabbitMqImpl {
 
     void configure() {
         ConnectionFactory factory = new ConnectionFactory()
-        String uri = System.getenv("CLOUDAMQP_URL") ?: "amqp://guest:guest@localhost"
+        String uri = System.getenv("CLOUDAMQP_URL") ?: "amqp://cypher:cypher@localhost"
         factory.setUri(uri)
         factory.setRequestedHeartbeat(30)
         factory.setConnectionTimeout(30)
@@ -56,15 +56,19 @@ class RabbitMqImpl {
     boolean sendMessage(String message, String routingKey){
         boolean success = true
         try {
+            println "sending $message with $routingKey"
             channel.basicPublish(exchange, routingKey, null, message.getBytes())
         } catch (IOException e) {
             //TODO error handling
             success = false
+            e.printStackTrace()
         }
+        println "sent $message with $routingKey"
         return success
     }
 
     void close(){
+        println "Closing queue"
         channel?.close()
         connection?.close()
     }

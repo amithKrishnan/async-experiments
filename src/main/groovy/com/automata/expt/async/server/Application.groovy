@@ -1,7 +1,6 @@
 package com.automata.expt.async.server
 
 import com.automata.expt.queue.RabbitMqImpl
-import com.automata.expt.queue.Worker
 import com.rabbitmq.client.QueueingConsumer
 import org.glassfish.grizzly.http.server.HttpServer
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory
@@ -19,7 +18,7 @@ import javax.ws.rs.container.Suspended
 @Path("/resource")
 class Application {
 
-    final URI BASE_URI = URI.create("http://localhost:8080/async-expermients/")
+    final URI BASE_URI = URI.create("http://localhost:8080/async-experiments/")
     ResourceConfig resourceConfig
     HttpServer server
 
@@ -66,6 +65,7 @@ class Application {
 
             @Override
             void run() {
+                println "Starting thread @ ${new Date().toString()}"
                 String result = ""
                 queue = new RabbitMqImpl()
                 queue.configure()
@@ -75,13 +75,17 @@ class Application {
                         QueueingConsumer.Delivery delivery = queue.appConsumer.nextDelivery()
                         if(delivery){
                             result = new String(delivery.getBody())
+                            println "Service got $result"
+                            queue?.close()
                             break;
+                        }else{
+                            println "Waiting"
                         }
                     }
                 }
                 asyncResponse.resume(result)
             }
-        }).start()
+        }, "Thread @ ${new Date().toString()}").start()
     }
 
 }
